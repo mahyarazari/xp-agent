@@ -1,22 +1,22 @@
 /* XP agent - meeting note. Usage: XPMeeting(elementId, data) where data = {p:[[key,name]], u:[names]} */
 (function(){
-const CSS = `#xm{direction:rtl;font-size:14px;padding:4px 0}
-#xm .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
-#xm label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
-#xm input,#xm select,#xm textarea{width:100%;box-sizing:border-box}
-#xm textarea{min-height:64px;resize:vertical}
-#xm .w{grid-column:1/-1}
-#xm .er{color:var(--text-danger);font-size:13px;min-height:18px;margin:6px 0}
-#xm .mu{color:var(--text-secondary);font-size:12px}
-#xm .wh{display:inline-flex;gap:4px;position:relative;border:0.5px solid var(--border);border-radius:10px;padding:0 6px}
-#xm .wh:before{content:"";position:absolute;left:4px;right:4px;top:32px;height:32px;border-radius:7px;background:var(--bg-secondary);pointer-events:none}
-#xm .wc{position:relative;height:96px;overflow-y:auto;scroll-snap-type:y mandatory;padding:32px 0;box-sizing:border-box;scrollbar-width:none;min-width:52px;text-align:center}
-#xm .wc::-webkit-scrollbar{display:none}
-#xm .wc.m{min-width:84px}
-#xm .wi{height:32px;line-height:32px;scroll-snap-align:center;color:var(--text-secondary);cursor:pointer;font-size:13px}
-#xm .wi.on{color:var(--text-primary);font-weight:600}
-#xm .ck{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-secondary)}
-#xm .ck input{width:auto}`;
+const CSS = `#xmt{direction:rtl;font-size:14px;padding:4px 0}
+#xmt .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
+#xmt label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
+#xmt input,#xmt select,#xmt textarea{width:100%;box-sizing:border-box}
+#xmt textarea{min-height:64px;resize:vertical}
+#xmt .w{grid-column:1/-1}
+#xmt .er{color:var(--text-danger);font-size:13px;min-height:18px;margin:6px 0}
+#xmt .mu{color:var(--text-secondary);font-size:12px}
+#xmt .wh{display:inline-flex;gap:4px;position:relative;border:0.5px solid var(--border);border-radius:10px;padding:0 6px}
+#xmt .wh:before{content:"";position:absolute;left:4px;right:4px;top:32px;height:32px;border-radius:7px;background:var(--bg-secondary);pointer-events:none}
+#xmt .wc{position:relative;height:96px;overflow-y:auto;scroll-snap-type:y mandatory;padding:32px 0;box-sizing:border-box;scrollbar-width:none;min-width:52px;text-align:center}
+#xmt .wc::-webkit-scrollbar{display:none}
+#xmt .wc.m{min-width:84px}
+#xmt .wi{height:32px;line-height:32px;scroll-snap-align:center;color:var(--text-secondary);cursor:pointer;font-size:13px}
+#xmt .wi.on{color:var(--text-primary);font-weight:600}
+#xmt .ck{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-secondary)}
+#xmt .ck input{width:auto}`;
 const JM = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"], YRS = [1405,1406,1407,1408,1409,1410], H = 32;
 const fa = n => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
@@ -45,7 +45,7 @@ window.XPMeeting = function (id, D) {
   if (!document.getElementById("xp-meeting-css")) { const st = document.createElement("style"); st.id = "xp-meeting-css"; st.textContent = CSS; document.head.appendChild(st); }
   const n = new Date(), t = g2j(n.getFullYear(), n.getMonth() + 1, n.getDate());
   const col = (k, list, cur, cls) => `<div class="wc ${cls || ""}" data-w="${k}">${list.map(([v, l]) => `<div class="wi${v === cur ? " on" : ""}" data-v="${v}">${l}</div>`).join("")}</div>`;
-  document.getElementById(id).innerHTML = `<div id="xm"><div class="g">
+  document.getElementById(id).innerHTML = `<div id="xmt"><div class="g">
     <div><label>پروژه *</label><select id="pj"><option value="">انتخاب پروژه</option>${(D.p || []).map(p => `<option value="${esc(p[0])}">${esc(p[1])} (${esc(p[0])})</option>`).join("")}</select></div>
     <div><label>نویسنده</label><select id="by"><option value="">—</option>${(D.u || []).map(u => `<option>${esc(u)}</option>`).join("")}</select></div>
     <div class="w"><label>تاریخ جلسه</label><div class="wh">${col("d", Array.from({ length: 31 }, (_, i) => [i + 1, fa(i + 1)]), t[2])}${col("m", JM.map((x, i) => [i + 1, x]), t[1], "m")}${col("y", YRS.map(y => [y, fa(y)]), YRS.includes(t[0]) ? t[0] : 1405)}</div></div>
@@ -55,7 +55,7 @@ window.XPMeeting = function (id, D) {
     <div class="w ck"><input type="checkbox" id="vc"><span>ویس یا متن کامل جلسه را هم در پیام بعدی می‌فرستم (موارد کاری از آن استخراج می‌شود)</span></div>
   </div><div class="er" id="er"></div>
   <div style="display:flex;gap:8px;align-items:center"><button type="button" id="sd">ارسال برای ایجنت ↗</button><span class="mu">قبل از ثبت در Jira پیش‌نمایش می‌بینید.</span></div></div>`;
-  const root = document.getElementById("xm"), $ = q => root.querySelector(q), pick = {};
+  const root = document.getElementById("xmt"), $ = q => root.querySelector(q), pick = {};
   root.querySelectorAll(".wc").forEach(c => {
     const it = [...c.children], k = c.dataset.w, start = Math.max(0, it.findIndex(x => x.classList.contains("on")));
     const set = i => { it.forEach((x, j) => x.classList.toggle("on", j === i)); pick[k] = +it[i].dataset.v; };
