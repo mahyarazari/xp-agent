@@ -1,4 +1,4 @@
-/* XP agent - meeting note. Usage: XPMeeting(elementId, data) where data = {p:[[key,name]], u:[names]} */
+/* XP agent - project update (meeting or any event). Usage: XPMeeting(elementId, data) where data = {p:[[key,name]], u:[names], sel?:key, by?:name} */
 (function(){
 const CSS = `#xmt{direction:rtl;font-size:14px;padding:4px 0}
 #xmt .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
@@ -46,13 +46,12 @@ window.XPMeeting = function (id, D) {
   const n = new Date(), t = g2j(n.getFullYear(), n.getMonth() + 1, n.getDate());
   const col = (k, list, cur, cls) => `<div class="wc ${cls || ""}" data-w="${k}">${list.map(([v, l]) => `<div class="wi${v === cur ? " on" : ""}" data-v="${v}">${l}</div>`).join("")}</div>`;
   document.getElementById(id).innerHTML = `<div id="xmt"><div class="g">
-    <div><label>پروژه *</label><select id="pj"><option value="">انتخاب پروژه</option>${(D.p || []).map(p => `<option value="${esc(p[0])}">${esc(p[1])} (${esc(p[0])})</option>`).join("")}</select></div>
-    <div><label>نویسنده</label><select id="by"><option value="">—</option>${(D.u || []).map(u => `<option>${esc(u)}</option>`).join("")}</select></div>
-    <div class="w"><label>تاریخ جلسه</label><div class="wh">${col("d", Array.from({ length: 31 }, (_, i) => [i + 1, fa(i + 1)]), t[2])}${col("m", JM.map((x, i) => [i + 1, x]), t[1], "m")}${col("y", YRS.map(y => [y, fa(y)]), YRS.includes(t[0]) ? t[0] : 1405)}</div></div>
-    <div class="w"><label>تصمیمات جلسه (هر تصمیم یک خط)</label><textarea id="dc" dir="auto" placeholder="مثلاً: داده‌ی فایننس تا هفته‌ی بعد آماده شود"></textarea></div>
-    <div class="w"><label>یادداشت (یک پاراگراف)</label><textarea id="nt" dir="auto" placeholder="چه گفته شد و وضعیت پروژه چیست"></textarea></div>
-    <div class="w"><label>قدم بعدی</label><input id="ns" dir="auto" placeholder="یک خط، کار بعدی پروژه"></div>
-    <div class="w ck"><input type="checkbox" id="vc"><span>ویس یا متن کامل جلسه را هم در پیام بعدی می‌فرستم (موارد کاری از آن استخراج می‌شود)</span></div>
+    <div><label>پروژه *</label><select id="pj"><option value="">انتخاب پروژه</option>${(D.p || []).map(p => `<option value="${esc(p[0])}"${p[0] === D.sel ? " selected" : ""}>${esc(p[1])} (${esc(p[0])})</option>`).join("")}</select></div>
+    <div><label>نویسنده</label><select id="by"><option value="">—</option>${(D.u || []).map(u => `<option${u === D.by ? " selected" : ""}>${esc(u)}</option>`).join("")}</select></div>
+    <div class="w"><label>تاریخ آپدیت</label><div class="wh">${col("d", Array.from({ length: 31 }, (_, i) => [i + 1, fa(i + 1)]), t[2])}${col("m", JM.map((x, i) => [i + 1, x]), t[1], "m")}${col("y", YRS.map(y => [y, fa(y)]), YRS.includes(t[0]) ? t[0] : 1405)}</div></div>
+    <div class="w"><label>آخرین آپدیت‌ها (چه اتفاقی افتاد؟ هر مورد یک خط، هرطور راحتید)</label><textarea id="up" dir="auto" style="min-height:96px" placeholder="مثلاً: فایننس داده را تا هفته‌ی بعد می‌دهد&#10;پایلوت در دو شهر شروع شد"></textarea></div>
+    <div class="w"><label>قدم بعدی</label><input id="ns" dir="auto" placeholder="کار بعدی که باید روی این پروژه انجام شود"></div>
+    <div class="w ck"><input type="checkbox" id="vc"><span>ویس یا متن جلسه را هم در پیام بعدی می‌فرستم (آپدیت‌ها و کارها از آن استخراج می‌شود)</span></div>
   </div><div class="er" id="er"></div>
   <div style="display:flex;gap:8px;align-items:center"><button type="button" id="sd">ارسال برای ایجنت ↗</button><span class="mu">قبل از ثبت در Jira پیش‌نمایش می‌بینید.</span></div></div>`;
   const root = document.getElementById("xmt"), $ = q => root.querySelector(q), pick = {};
@@ -68,16 +67,15 @@ window.XPMeeting = function (id, D) {
   root.addEventListener("input", () => { $("#er").textContent = ""; });
   $("#sd").onclick = () => {
     root.querySelectorAll(".wc").forEach(c => { const it = c.children, i = Math.min(it.length - 1, Math.max(0, Math.round(c.scrollTop / H))); pick[c.dataset.w] = +it[i].dataset.v; });
-    const pj = $("#pj").value, dc = $("#dc").value.trim(), nt = $("#nt").value.trim(), ns = $("#ns").value.trim(), vc = $("#vc").checked;
+    const pj = $("#pj").value, up = $("#up").value.trim(), ns = $("#ns").value.trim(), vc = $("#vc").checked;
     if (!pj) { $("#er").textContent = "پروژه را انتخاب کنید."; return; }
-    if (!dc && !nt && !ns && !vc) { $("#er").textContent = "حداقل یکی از تصمیمات، یادداشت یا قدم بعدی را بنویسید."; return; }
+    if (!up && !ns && !vc) { $("#er").textContent = "آپدیت یا قدم بعدی را بنویسید."; return; }
     const d = Math.min(pick.d, jLen(pick.y, pick.m)), g = j2g(pick.y, pick.m, d), name = ((D.p || []).find(p => p[0] === pj) || [pj, ""])[1];
-    const o = ["#یادداشت_جلسه", "پروژه: " + pj + " · " + name, "تاریخ جلسه: " + pick.y + "/" + String(pick.m).padStart(2, "0") + "/" + String(d).padStart(2, "0") + " (" + iso(g[0], g[1], g[2]) + ")"];
+    const o = ["#آپدیت_پروژه", "پروژه: " + pj + " · " + name, "تاریخ آپدیت: " + pick.y + "/" + String(pick.m).padStart(2, "0") + "/" + String(d).padStart(2, "0") + " (" + iso(g[0], g[1], g[2]) + ")"];
     if ($("#by").value) o.push("نویسنده: " + $("#by").value);
-    if (dc) o.push("تصمیمات:", ...dc.split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => "- " + x.replace(/^[-•*]\s*/, "")));
-    if (nt) o.push("یادداشت: " + nt.replace(/\s*\n+\s*/g, " "));
+    if (up) o.push("آپدیت‌ها:", ...up.split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => "- " + x.replace(/^[-•*]\s*/, "")));
     if (ns) o.push("قدم بعدی: " + ns);
-    o.push("متن یا ویس جلسه: " + (vc ? "در پیام بعدی می‌فرستم" : "ندارد"));
+    o.push("ویس یا متن جلسه: " + (vc ? "در پیام بعدی می‌فرستم" : "ندارد"));
     $("#er").textContent = "";
     sendPrompt(o.join("\n"));
   };
