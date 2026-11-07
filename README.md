@@ -1,9 +1,5 @@
 # xp-agent widgets
 
-Menu and intake form for the Experience team PM agent in Claude.
-Loaded by the agent from jsDelivr: https://cdn.jsdelivr.net/gh/<user>/xp-agent@main/menu.js and form.js
+Chat widgets for the Experience team PM agent in Claude: `menu.js` (start menu), `form.js` (intake form), `meeting.js` (meeting note).
+Loaded by the agent from jsDelivr, pinned to a commit: `https://cdn.jsdelivr.net/gh/mahyarazari/xp-agent@<commit>/<file>`
 No data and no secrets are stored here. Jira data is passed in by the agent at runtime.
-
-After changing a file, clear the CDN cache:
-https://purge.jsdelivr.net/gh/<user>/xp-agent@main/menu.js
-https://purge.jsdelivr.net/gh/<user>/xp-agent@main/form.js
